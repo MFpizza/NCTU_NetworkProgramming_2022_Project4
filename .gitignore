@@ -49,3 +49,5 @@ Thumbs.db
 *.wmv
 
 hw4.cgi
+http_server
+sock_server

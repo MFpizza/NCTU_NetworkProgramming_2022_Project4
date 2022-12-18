@@ -3,31 +3,34 @@
 bool session::checkfirewall()
 {
     string s;
+    file.open("socks.conf", ios::in);
     while (getline(file, s))
     {
         if ((CD == 2 && s[7] == 'b') || (CD == 1 && s[7] == 'c'))
         {
             string ReadIp = s.substr(9);
             stringstream Read(ReadIp);
-            if (DOMAIN_NAME.empty())
+            stringstream vertify(DSTIP);
+            string sep1, sep2;
+            while (getline(Read, sep1, '.') && getline(vertify, sep2, '.'))
             {
-                stringstream vertify(DSTIP);
-                string sep1, sep2;
-                while (getline(Read, sep1, '.') && getline(vertify, sep2, '.'))
+                if (sep1 == "*")
                 {
-                    if (sep1 == "*")
-                    {
-                        return true;
-                    }
-                    else if (sep1 != sep2)
-                    {
-                        return false;
-                    }
+                    file.close();
+                    return true;
                 }
-                return true;
+                else if (sep1 != sep2)
+                {
+                    file.close();
+                    return false;
+                }
             }
+            file.close();
+            return true;
         }
     }
+    file.close();
+    return false;
 }
 
 void session::do_read()

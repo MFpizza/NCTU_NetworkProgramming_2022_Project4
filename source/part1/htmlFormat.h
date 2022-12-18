@@ -210,7 +210,7 @@ void printHTML(vector<npshell> shells)
         <tr>";
     string th = "<th scope=\"col\">" + shells[i].host + ":" + shells[i].port + "</th>";
     cout << th;
-    if (i + 1 < shells.size())
+    if (i + 1 < shells.size()-1)
     {
       string th = "<th scope=\"col\">" + shells[i + 1].host + ":" + shells[i + 1].port + "</th>";
       cout << th;
@@ -221,7 +221,7 @@ void printHTML(vector<npshell> shells)
         <tr>";
     string td = "<td><pre id=\"s" + to_string(i) + "\" class=\"mb-0\"></pre></td>";
     cout << td;
-    if (i + 1 < shells.size())
+    if (i + 1 < shells.size()-1)
     {
       string td = "<td><pre id=\"s" + to_string(i + 1) + "\" class=\"mb-0\"></pre></td>";
       cout << td;

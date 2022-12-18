@@ -26,7 +26,6 @@ public:
     session(tcp::socket socket)
         : socket_(std::move(socket)), http_socket(io_context), resolve(io_context), bind_acceptor(io_context, tcp::endpoint(tcp::v4(), 0))
     {
-        file.open("socks.conf", ios::in);
     }
     ~session()
     {
