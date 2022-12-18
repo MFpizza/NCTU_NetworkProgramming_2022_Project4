@@ -42,7 +42,7 @@ private:
                 io_context.notify_fork(io_service::fork_child);
                 acceptor_.close();
                 signal_.cancel();
-                cerr<<"create session"<<endl;
+                // cerr<<"create session"<<endl;
                 std::make_shared<session>(std::move(socket))->start(); 
             }
             else
@@ -72,7 +72,7 @@ int main(int argc, char* argv[])
       return 1;
     }
 
-    cout<<"Port: "<<std::atoi(argv[1])<<endl;
+    // cout<<"Port: "<<std::atoi(argv[1])<<endl;
     server s(io_context, std::atoi(argv[1]));
 
     io_context.run();

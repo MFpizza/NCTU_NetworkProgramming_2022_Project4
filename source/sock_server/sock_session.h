@@ -30,7 +30,7 @@ public:
     }
     ~session()
     {
-        cout << "session close" << endl;
+        // cout << "session close" << endl;
     }
 
     void start()

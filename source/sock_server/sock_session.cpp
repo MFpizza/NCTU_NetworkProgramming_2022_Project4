@@ -39,18 +39,18 @@ void session::do_read()
                                 if (!ec)
                                 {
                                     // cout<<"length:"<<length<<endl;
-                                    cout << endl;
-                                    for (int i = 0; i < length; i++)
-                                    {
-                                        // if(data_[i]>='a'&&data_[i]<='z')
-                                        //     cout<<data_[i];
-                                        // else{
-                                        unsigned int temp = data_[i];
-                                        cout << temp;
-                                        // }
-                                        cout << "/";
-                                    }
-                                    cout << endl;
+                                    // cout << endl;
+                                    // for (int i = 0; i < length; i++)
+                                    // {
+                                    //     // if(data_[i]>='a'&&data_[i]<='z')
+                                    //     //     cout<<data_[i];
+                                    //     // else{
+                                    //     unsigned int temp = data_[i];
+                                    //     cout << temp;
+                                    //     // }
+                                    //     cout << "/";
+                                    // }
+                                    // cout << endl;
                                     VN = data_[0];
                                     CD = data_[1];
 
