@@ -42,7 +42,7 @@ private:
                 io_context.notify_fork(io_service::fork_child);
                 acceptor_.close();
                 signal_.cancel();
-                // cerr<<"create session"<<endl;
+                cerr<<"create session"<<endl;
                 std::make_shared<session>(std::move(socket))->start(); 
             }
             else
