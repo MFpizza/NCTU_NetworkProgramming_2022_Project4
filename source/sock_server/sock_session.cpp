@@ -248,11 +248,13 @@ void session::Do_Relaying(int cas)
                                         }
                                         else if (ec == boost::asio::error::eof)
                                         {
+                                            http_socket.close();
+                                        socket_.close();
                                             // cout<<"EOF"<<endl;
                                         }
                                         else
                                         {
-                                            perror("http read");
+                                            // perror("http read");
                                         }
                                     });
     }
@@ -284,6 +286,8 @@ void session::Do_Relaying(int cas)
                                     else if (ec == boost::asio::error::eof)
                                     {
                                         // cout<<"EOF"<<endl;
+                                        socket_.close();
+                                            http_socket.close();
                                     }
                                     else
                                     {
