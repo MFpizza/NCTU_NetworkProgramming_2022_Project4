@@ -12,10 +12,12 @@ int main(){
         npshell newShell;
         newShell.host = parameter[i];
         newShell.port = parameter[i+1];
-        newShell.file = parameter[i+2];
+        if(i+2<parameter.size()){
+            newShell.file = parameter[i+2];
+        }
         shells.push_back(newShell);
     }
-
+    
     printHTML(shells);
 
     serverToNP myServer;

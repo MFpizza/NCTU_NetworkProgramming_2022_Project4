@@ -9,20 +9,23 @@ bool session::checkfirewall()
         {
             string ReadIp = s.substr(9);
             stringstream Read(ReadIp);
-            stringstream vertify(DSTIP);
-            string sep1, sep2;
-            while (getline(Read, sep1, '.') && getline(vertify, sep2, '.'))
+            if (DOMAIN_NAME.empty())
             {
-                if (sep1 == "*")
+                stringstream vertify(DSTIP);
+                string sep1, sep2;
+                while (getline(Read, sep1, '.') && getline(vertify, sep2, '.'))
                 {
-                    return true;
+                    if (sep1 == "*")
+                    {
+                        return true;
+                    }
+                    else if (sep1 != sep2)
+                    {
+                        return false;
+                    }
                 }
-                else if (sep1 != sep2)
-                {
-                    return false;
-                }
+                return true;
             }
-            return true;
         }
     }
 }
@@ -69,6 +72,14 @@ void session::do_read()
                                             DOMAIN_NAME += data_[i];
                                         if (data_[i] == 0)
                                             getDOMAIN = !getDOMAIN;
+                                    }
+
+                                    if (!DOMAIN_NAME.empty())
+                                    {
+                                        tcp::resolver::query query(DOMAIN_NAME, DSTPORT);
+                                        boost::asio::ip::tcp::resolver::iterator peer_endpoints = resolve.resolve(query);
+                                        boost::asio::ip::tcp::endpoint end = (*peer_endpoints);
+                                        DSTIP = end.address().to_string();
                                     }
 
                                     if (CD == 2)
@@ -155,51 +166,36 @@ void session::Do_Connect()
 {
     auto self(shared_from_this());
     // has DSTIP
-    if (DOMAIN_NAME.empty())
+    memset(socks4_reply, '\0', sizeof(unsigned char) * 200);
+    socks4_reply[0] = 0;
+
+    if (!checkfirewall())
     {
-        boost::asio::ip::tcp::endpoint dst_endpoint(boost::asio::ip::address::from_string(DSTIP), atoi(DSTPORT.c_str()));
-        http_socket.async_connect(dst_endpoint, boost::bind(&session::connectHandler, self, boost::asio::placeholders::error));
+        socks4_reply[1] = 91;
+        boost::asio::async_write(socket_, boost::asio::buffer(socks4_reply, 8),
+                                 [this, self](boost::system::error_code ec, std::size_t /*length*/) {});
+        
+        printVaraible();
+        return;
     }
-    // has domain name dst
-    else
-    {
-        tcp::resolver::query query(DOMAIN_NAME, DSTPORT);
-        // resolve.async_resolve(query,boost::bind(&session::resolveHandler, self,boost::asio::placeholders::error,boost::asio::placeholders::iterator ));
-        resolve.async_resolve(query,
-                              [this, self](boost::system::error_code ec, tcp::resolver::iterator it)
-                              {
-                                  if (!ec)
-                                  {
-                                      boost::asio::ip::tcp::endpoint end = (*it);
-                                      DSTIP = end.address().to_string();
-                                      http_socket.async_connect(*it, boost::bind(&session::connectHandler, self, boost::asio::placeholders::error));
-                                  }
-                                  else
-                                  {
-                                      perror("resolve");
-                                  }
-                              });
-    }
+    boost::asio::ip::tcp::endpoint dst_endpoint(boost::asio::ip::address::from_string(DSTIP), atoi(DSTPORT.c_str()));
+    http_socket.async_connect(dst_endpoint, boost::bind(&session::connectHandler, self, boost::asio::placeholders::error));
 }
 
 void session::connectHandler(const boost::system::error_code &err)
 {
     auto self(shared_from_this());
-    memset(socks4_reply, '\0', sizeof(unsigned char) * 200);
+
     if (!err)
     {
         // cout<<"connect"<<endl;
-        socks4_reply[0] = 0;
         socks4_reply[1] = 90;
-        std::string sClientIp = http_socket.remote_endpoint().address().to_string();
-        unsigned short uiClientPort = http_socket.remote_endpoint().port();
-        cout << "Connect:" << sClientIp << " " << uiClientPort << endl;
+        // std::string sClientIp = http_socket.remote_endpoint().address().to_string();
+        // unsigned short uiClientPort = http_socket.remote_endpoint().port();
+        // cout << "Connect:" << sClientIp << " " << uiClientPort << endl;
     }
     else
     {
-        // perror("connectHandler");
-        // cout<<"not connect"<<endl;
-        socks4_reply[0] = 0;
         socks4_reply[1] = 91;
     }
 
@@ -209,7 +205,8 @@ void session::connectHandler(const boost::system::error_code &err)
                              {
                                  if (!ec)
                                  {
-                                     Do_Relaying(3);
+                                     if (socks4_reply[1] == 90)
+                                         Do_Relaying(3);
                                  }
                                  else
                                  {
