@@ -91,8 +91,8 @@ void session::do_read()
                                     {
                                         socks4_reply[1] = 91;
                                         boost::asio::async_write(socket_, boost::asio::buffer(socks4_reply, 8),
-                                                                [this, self](boost::system::error_code ec, std::size_t /*length*/) {});
-                                        
+                                                                 [this, self](boost::system::error_code ec, std::size_t /*length*/) {});
+
                                         printVaraible();
                                         return;
                                     }
@@ -127,44 +127,17 @@ void session::Do_Bind()
     socks4_reply[2] = (unsigned char)(bind_port / 256);
     socks4_reply[3] = (unsigned char)(bind_port % 256);
     printVaraible();
-
-    socket_.async_send(boost::asio::buffer(socks4_reply, 8),
-                       [this, self](boost::system::error_code err, std::size_t length_)
-                       {
-                           if (!err)
-                           {
-                               bind_acceptor.async_accept(http_socket, [this, self](boost::system::error_code err)
-                                                          {
-							if (!err){
-                            // cout<<"accept:\nIP:"<<http_socket.remote_endpoint().address().to_string()<<"\nPort:"<<std::to_string(http_socket.remote_endpoint().port())<<endl;
-                            // cout<<"local:\nIP:"<<http_socket.local_endpoint().address().to_string()<<"\nPort:"<<std::to_string(http_socket.local_endpoint().port())<<endl;
-                            
-                                socket_.async_send( boost::asio::buffer(socks4_reply, 8),
-									[this,self](boost::system::error_code err, std::size_t len){
-										if(!err) {
-                                            Do_Relaying(3);
-										}
-                                        else{
-                                            perror("do bind send2");
-                                        }
-									});
-                            }
-							else{
-								perror("do bind accept");
-							} });
-                           }
-                           else
-                           {
-                               perror("do bind send1");
-                           }
-                       });
+    socket_.send(boost::asio::buffer(socks4_reply, 8));
+    bind_acceptor.accept(http_socket);
+    socket_.send(boost::asio::buffer(socks4_reply, 8));
+    Do_Relaying(3);
 }
 
 void session::Do_Connect()
 {
     auto self(shared_from_this());
     // has DSTIP
-    
+
     boost::asio::ip::tcp::endpoint dst_endpoint(boost::asio::ip::address::from_string(DSTIP), atoi(DSTPORT.c_str()));
     http_socket.async_connect(dst_endpoint, boost::bind(&session::connectHandler, self, boost::asio::placeholders::error));
 }
@@ -233,7 +206,7 @@ void session::Do_Relaying(int cas)
                                         else if (ec == boost::asio::error::eof)
                                         {
                                             http_socket.close();
-                                        socket_.close();
+                                            socket_.close();
                                             // cout<<"EOF"<<endl;
                                         }
                                         else
@@ -271,7 +244,7 @@ void session::Do_Relaying(int cas)
                                     {
                                         // cout<<"EOF"<<endl;
                                         socket_.close();
-                                            http_socket.close();
+                                        http_socket.close();
                                     }
                                     else
                                     {
