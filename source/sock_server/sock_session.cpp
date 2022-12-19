@@ -84,6 +84,18 @@ void session::do_read()
                                         boost::asio::ip::tcp::endpoint end = (*peer_endpoints);
                                         DSTIP = end.address().to_string();
                                     }
+                                    memset(socks4_reply, '\0', sizeof(unsigned char) * 200);
+                                    socks4_reply[0] = 0;
+
+                                    if (!checkfirewall())
+                                    {
+                                        socks4_reply[1] = 91;
+                                        boost::asio::async_write(socket_, boost::asio::buffer(socks4_reply, 8),
+                                                                [this, self](boost::system::error_code ec, std::size_t /*length*/) {});
+                                        
+                                        printVaraible();
+                                        return;
+                                    }
 
                                     if (CD == 2)
                                     {
@@ -114,6 +126,7 @@ void session::Do_Bind()
     socks4_reply[1] = 90;
     socks4_reply[2] = (unsigned char)(bind_port / 256);
     socks4_reply[3] = (unsigned char)(bind_port % 256);
+    printVaraible();
 
     socket_.async_send(boost::asio::buffer(socks4_reply, 8),
                        [this, self](boost::system::error_code err, std::size_t length_)
@@ -126,24 +139,6 @@ void session::Do_Bind()
                             // cout<<"accept:\nIP:"<<http_socket.remote_endpoint().address().to_string()<<"\nPort:"<<std::to_string(http_socket.remote_endpoint().port())<<endl;
                             // cout<<"local:\nIP:"<<http_socket.local_endpoint().address().to_string()<<"\nPort:"<<std::to_string(http_socket.local_endpoint().port())<<endl;
                             
-                            // Do_Relaying(3);
-                            //  http_socket.async_read_some(boost::asio::buffer(data_, max_length),
-                            //     [this, self](boost::system::error_code ec, std::size_t length)
-                            //     {
-                            //     if (!ec)
-                            //     {
-                            //         cout<<"length:"<<length<<endl;
-                            //         cout<<endl;
-                            //         for(int i=0;i<length;i++){
-                            //             if(data_[i]>='a'&&data_[i]<='z')
-                            //                 cout<<data_[i];
-                            //             else{
-                            //                 unsigned int temp = data_[i];
-                            //                 cout<< temp;
-                            //             }
-                            //             cout<<"/";
-                            //         }
-                            //     }});
                                 socket_.async_send( boost::asio::buffer(socks4_reply, 8),
 									[this,self](boost::system::error_code err, std::size_t len){
 										if(!err) {
@@ -169,18 +164,7 @@ void session::Do_Connect()
 {
     auto self(shared_from_this());
     // has DSTIP
-    memset(socks4_reply, '\0', sizeof(unsigned char) * 200);
-    socks4_reply[0] = 0;
-
-    if (!checkfirewall())
-    {
-        socks4_reply[1] = 91;
-        boost::asio::async_write(socket_, boost::asio::buffer(socks4_reply, 8),
-                                 [this, self](boost::system::error_code ec, std::size_t /*length*/) {});
-        
-        printVaraible();
-        return;
-    }
+    
     boost::asio::ip::tcp::endpoint dst_endpoint(boost::asio::ip::address::from_string(DSTIP), atoi(DSTPORT.c_str()));
     http_socket.async_connect(dst_endpoint, boost::bind(&session::connectHandler, self, boost::asio::placeholders::error));
 }
